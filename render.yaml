@@ -1,0 +1,21 @@
+# Deploy the Socket.IO game server on Render (free tier available).
+# Vercel hosts the static client; this service handles realtime gameplay.
+#
+# Connect both:
+#   1. Deploy this service on Render → copy its URL (e.g. https://maskari-api.onrender.com)
+#   2. In Vercel project settings, set VITE_SERVER_URL to that URL
+#   3. Redeploy the Vercel frontend
+
+services:
+  - type: web
+    name: maskari-api
+    runtime: node
+    plan: free
+    buildCommand: npm install && npm run build -w @maskari/shared && npm run build -w @maskari/server
+    startCommand: npm run start:api -w @maskari/server
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: SERVE_CLIENT
+        value: "false"
