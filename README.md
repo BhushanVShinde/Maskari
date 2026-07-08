@@ -56,8 +56,9 @@ Set `PORT` to change the listen port (default `3001`).
 ### 2. Deploy the client on Vercel
 
 1. Go to [vercel.com](https://vercel.com) → **Add New Project** → import the same repo.
-2. Vercel picks up `vercel.json` automatically (root directory = repo root).
-3. **Environment variable** (required):
+2. **Root Directory:** leave blank (repo root — **not** `server` or `client`).
+3. Vercel picks up `vercel.json` automatically.
+4. **Environment variable** (required):
 
    | Name | Value |
    |------|-------|

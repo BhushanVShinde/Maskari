@@ -16,6 +16,7 @@
     "dev:server": "npm run dev -w @maskari/server",
     "dev:client": "npm run dev -w @maskari/client",
     "build": "npm run build -w @maskari/shared && npm run build -w @maskari/server && npm run build -w @maskari/client",
+    "build:web": "npm run build -w @maskari/shared && npm run build -w @maskari/client",
     "start": "cross-env NODE_ENV=production SERVE_CLIENT=true npm run start -w @maskari/server",
     "test": "node scripts/smoke.mjs"
   },
