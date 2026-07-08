@@ -3,6 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "description": "Free real-time multiplayer drawing-and-guessing game",
+  "engines": {
+    "node": ">=20"
+  },
   "workspaces": [
     "shared",
     "server",

@@ -11,11 +11,10 @@ services:
     name: maskari-api
     runtime: node
     plan: free
-    buildCommand: npm install && npm run build -w @maskari/shared && npm run build -w @maskari/server
+    # NODE_ENV must not be "production" during install — TypeScript lives in devDependencies.
+    buildCommand: npm install --include=dev && npm run build -w @maskari/shared && npm run build -w @maskari/server
     startCommand: npm run start:api -w @maskari/server
     healthCheckPath: /health
     envVars:
-      - key: NODE_ENV
-        value: production
       - key: SERVE_CLIENT
         value: "false"
