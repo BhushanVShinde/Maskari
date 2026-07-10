@@ -42,6 +42,9 @@ export class Room {
   chooseTimer: ReturnType<typeof setTimeout> | null = null;
   drawTimer: ReturnType<typeof setTimeout> | null = null;
   gapTimer: ReturnType<typeof setTimeout> | null = null;
+  hintTimer: ReturnType<typeof setTimeout> | null = null;
+  /** 0-based indices of letters revealed as hints this turn. */
+  revealedHintIndices = new Set<number>();
   turnEndsAt: number | null = null;
   chooseEndsAt: number | null = null;
   revealWord: string | null = null;
@@ -167,9 +170,11 @@ export class Room {
     if (this.chooseTimer) clearTimeout(this.chooseTimer);
     if (this.drawTimer) clearTimeout(this.drawTimer);
     if (this.gapTimer) clearTimeout(this.gapTimer);
+    if (this.hintTimer) clearTimeout(this.hintTimer);
     this.chooseTimer = null;
     this.drawTimer = null;
     this.gapTimer = null;
+    this.hintTimer = null;
   }
 
   /** Reset all per-game/turn state back to lobby defaults. */
@@ -191,6 +196,7 @@ export class Room {
     this.turnStartedAt = null;
     this.roundPoints.clear();
     this.roundEndEndsAt = null;
+    this.revealedHintIndices.clear();
     this.clearStrokes();
   }
 
@@ -269,8 +275,11 @@ export class Room {
       round: this.round,
       totalRounds: this.settings.rounds,
       currentDrawerId: this.currentDrawerId,
-      maskedWord: this.currentWord ? maskWord(this.currentWord) : null,
+      maskedWord: this.currentWord
+        ? maskWord(this.currentWord, this.revealedHintIndices)
+        : null,
       wordLength: this.currentWord ? wordLetterCount(this.currentWord) : null,
+      hintCount: this.revealedHintIndices.size,
       turnEndsAt: this.turnEndsAt,
       chooseEndsAt: this.chooseEndsAt,
       revealWord: this.revealWord,

@@ -53,18 +53,44 @@ export function pickWords(
 /**
  * Build a masked version of a word for guessers: letters become spaced
  * underscores, e.g. "pizza" → "_ _ _ _ _". Spaces between words are preserved.
+ * Pass `revealedIndices` (0-based letter index) to reveal hint letters.
  */
-export function maskWord(word: string): string {
+export function maskWord(
+  word: string,
+  revealedIndices: ReadonlySet<number> = new Set(),
+): string {
+  let idx = 0;
   return word
     .trim()
     .split(/\s+/)
     .map((segment) =>
       [...segment]
         .filter((c) => /[a-z0-9]/i.test(c))
-        .map(() => "_")
+        .map((c) => {
+          const i = idx++;
+          return revealedIndices.has(i) ? c.toUpperCase() : "_";
+        })
         .join(" "),
     )
     .join("   ");
+}
+
+/** Flat letter indices that are not yet revealed (for hint scheduling). */
+export function unrevealedLetterIndices(
+  word: string,
+  revealed: ReadonlySet<number>,
+): number[] {
+  const out: number[] = [];
+  let idx = 0;
+  for (const segment of word.trim().split(/\s+/)) {
+    for (const c of segment) {
+      if (/[a-z0-9]/i.test(c)) {
+        if (!revealed.has(idx)) out.push(idx);
+        idx++;
+      }
+    }
+  }
+  return out;
 }
 
 /** Number of guessable letters (excludes spaces/hyphens). */

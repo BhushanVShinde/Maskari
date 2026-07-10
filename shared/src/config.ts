@@ -52,6 +52,14 @@ export const TIMING = {
   roundEndSeconds: 6,
   /** How long a disconnected player can reconnect before being removed. */
   disconnectGraceSeconds: 90,
+  /** Seconds between automatic letter hints during drawing (skribbl-style). */
+  hintIntervalSeconds: 10,
+} as const;
+
+/** Letter-hint rules during the drawing phase. */
+export const HINTS = {
+  /** Stop revealing when this many letters remain hidden. */
+  minHiddenLetters: 2,
 } as const;
 
 /**

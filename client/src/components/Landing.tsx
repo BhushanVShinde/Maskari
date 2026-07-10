@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import type { Ack, JoinedRoomData } from "@maskari/shared";
 import { AVATAR_COLORS, NICKNAME } from "@maskari/shared";
+import Avatar from "./Avatar";
 import SoundToggle from "./SoundToggle";
 
 type Props = {
@@ -15,7 +16,13 @@ type Props = {
   onToggleSound: () => void;
 };
 
-export default function Landing({ connected, createRoom, joinRoom, soundOn, onToggleSound }: Props) {
+export default function Landing({
+  connected,
+  createRoom,
+  joinRoom,
+  soundOn,
+  onToggleSound,
+}: Props) {
   const [nickname, setNickname] = useState("");
   const [color, setColor] = useState<string>(AVATAR_COLORS[5]);
   const [mode, setMode] = useState<"create" | "join">("create");
@@ -23,7 +30,6 @@ export default function Landing({ connected, createRoom, joinRoom, soundOn, onTo
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
-  // Prefill + switch to join mode when arriving via a shared ?room=CODE link.
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const room = params.get("room");
@@ -57,16 +63,28 @@ export default function Landing({ connected, createRoom, joinRoom, soundOn, onTo
     if (!res.ok) setError(res.error);
   }
 
+  const previewName = nickname.trim() || "Player";
+
   return (
     <div className="page">
       <div className="card">
-        <h1>
-          Maskari <span className="tag">draw &amp; guess</span>
-        </h1>
-        <p className="subtitle">Free multiplayer Pictionary. No sign-up.</p>
+        <div className="landing-hero">
+          <div className="landing-logo">
+            Maskari<span>.io</span>
+          </div>
+          <p className="subtitle">Draw, guess, score — free multiplayer fun!</p>
+        </div>
 
         <div className="landing-tools">
           <SoundToggle enabled={soundOn} onToggle={onToggleSound} />
+        </div>
+
+        <div className="landing-preview">
+          <Avatar nickname={previewName} color={color} size="lg" />
+          <div>
+            <div className="landing-preview__label">Your avatar</div>
+            <strong>{previewName}</strong>
+          </div>
         </div>
 
         <div className="segmented">
@@ -113,7 +131,7 @@ export default function Landing({ connected, createRoom, joinRoom, soundOn, onTo
           )}
 
           <div className="field">
-            <span>Avatar color</span>
+            <span>Pick your color</span>
             <div className="colors">
               {AVATAR_COLORS.map((c) => (
                 <button
@@ -130,16 +148,25 @@ export default function Landing({ connected, createRoom, joinRoom, soundOn, onTo
 
           {error && <p className="error">{error}</p>}
 
-          <button className="btn" type="submit" disabled={busy || !connected}>
+          <button className="btn btn--play" type="submit" disabled={busy || !connected}>
             {!connected
               ? "Connecting…"
               : busy
                 ? "Please wait…"
                 : mode === "create"
-                  ? "Create room"
-                  : "Join room"}
+                  ? "🎨 Play!"
+                  : "🚀 Join game"}
           </button>
         </form>
+
+        <div className="how-to">
+          <h3>How to play</h3>
+          <ol>
+            <li>One player draws a secret word</li>
+            <li>Others guess in chat — faster = more points</li>
+            <li>Take turns until someone wins!</li>
+          </ol>
+        </div>
       </div>
     </div>
   );

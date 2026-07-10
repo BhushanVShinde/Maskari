@@ -6,13 +6,11 @@
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "tsc -p tsconfig.json",
-    "start": "node dist/index.js",
-    "start:api": "cross-env NODE_ENV=production SERVE_CLIENT=false node dist/index.js"
+    "start": "node dist/index.js"
   },
   "dependencies": {
     "@maskari/shared": "*",
     "cors": "^2.8.5",
-    "cross-env": "^7.0.3",
     "express": "^4.21.1",
     "socket.io": "^4.8.1"
   },

@@ -55,6 +55,8 @@ export interface RoomState {
   maskedWord: string | null;
   /** Number of guessable letters in the current word. */
   wordLength: number | null;
+  /** How many hint letters have been revealed this turn. */
+  hintCount: number;
   /** Epoch ms when the drawing timer ends (null unless drawing). */
   turnEndsAt: number | null;
   /** Epoch ms when the drawer's word-choice window ends (null unless choosing). */

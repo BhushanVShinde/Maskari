@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { Ack, Player } from "@maskari/shared";
+import Avatar from "./Avatar";
 
 type Props = {
   players: Player[];
@@ -14,7 +15,6 @@ type Props = {
 
 const MEDALS = ["🥇", "🥈", "🥉"];
 
-/** Final leaderboard with Play Again / Leave actions. */
 export default function GameOverScreen({
   players,
   me,
@@ -45,22 +45,21 @@ export default function GameOverScreen({
     <div className="page game-over-page">
       <div className="card card--wide game-over-card">
         <h1>
-          Game over <span className="tag">final scores</span>
+          Game over! <span className="tag">final scores</span>
         </h1>
 
         {winnerNickname && (
           <div className={`winner-banner ${isWinner ? "winner-banner--you" : ""}`}>
             <span className="winner-banner__crown">👑</span>
+            <Avatar nickname={winnerNickname} color={sorted[0]?.color ?? "#eab308"} size="lg" />
             <div>
               <p className="winner-banner__label">Winner</p>
               <p className="winner-banner__name">
                 {winnerNickname}
-                {isWinner && <span className="you"> (that's you!)</span>}
+                {isWinner && <span className="you"> (You!)</span>}
               </p>
             </div>
-            <span className="winner-banner__score">
-              {sorted[0]?.score ?? 0} pts
-            </span>
+            <span className="winner-banner__score">{sorted[0]?.score ?? 0}</span>
           </div>
         )}
 
@@ -73,12 +72,12 @@ export default function GameOverScreen({
               <span className="leaderboard__rank">
                 {i < 3 ? MEDALS[i] : i + 1}
               </span>
-              <span className="avatar" style={{ background: p.color }} />
+              <Avatar nickname={p.nickname} color={p.color} size="md" />
               <span className="leaderboard__name">
                 {p.nickname}
                 {p.id === me?.id && <span className="you"> (you)</span>}
               </span>
-              <span className="leaderboard__score">{p.score} pts</span>
+              <span className="leaderboard__score">{p.score}</span>
             </li>
           ))}
         </ol>
@@ -86,10 +85,10 @@ export default function GameOverScreen({
         <div className="game-over__actions">
           {isHost ? (
             <>
-              <button className="btn" onClick={handlePlayAgain} disabled={busy}>
-                {busy ? "Starting…" : "Play again"}
+              <button className="btn btn--play" type="button" onClick={handlePlayAgain} disabled={busy}>
+                {busy ? "Starting…" : "🔄 Play again"}
               </button>
-              <button className="btn btn--ghost" onClick={onBackToLobby}>
+              <button className="btn btn--ghost" type="button" onClick={onBackToLobby}>
                 Back to lobby
               </button>
             </>
@@ -98,7 +97,7 @@ export default function GameOverScreen({
               Waiting for the host to start a new game…
             </p>
           )}
-          <button className="btn btn--ghost" onClick={onLeave}>
+          <button className="btn btn--ghost" type="button" onClick={onLeave}>
             Leave room
           </button>
         </div>

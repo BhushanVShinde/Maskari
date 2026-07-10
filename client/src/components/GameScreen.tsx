@@ -5,7 +5,10 @@ import CountdownTimer from "./CountdownTimer";
 import WordChoiceModal from "./WordChoiceModal";
 import RoundEndOverlay from "./RoundEndOverlay";
 import ChatPanel from "./ChatPanel";
+import PlayerSlot from "./PlayerSlot";
 import SoundToggle from "./SoundToggle";
+import Avatar from "./Avatar";
+import WordTiles from "./WordTiles";
 
 type Props = {
   state: RoomState;
@@ -45,9 +48,9 @@ export default function GameScreen({
   onToggleSound,
 }: Props) {
   const canDraw = state.phase === "drawing" && isDrawer;
-
   const drawer = state.players.find((p) => p.id === state.currentDrawerId);
   const players = [...state.players].sort((a, b) => b.score - a.score);
+  const leaderId = players[0]?.id;
 
   const showWordModal =
     isDrawer &&
@@ -61,97 +64,104 @@ export default function GameScreen({
 
   return (
     <div className={`game ${state.phase === "roundEnd" ? "game--round-end" : ""}`}>
-      <header className="game__head">
-        <div className="game__title">
-          <strong>Maskari</strong>
+      <header className="game__topbar">
+        <div className="game__brand">
+          Maskari<span>.io</span>
+        </div>
+        <div className="game__chips">
           <span className="chip">Room {state.code}</span>
-          <span className="chip chip--muted">
-            Round {state.round}/{state.totalRounds}
-          </span>
+          <span className="chip">Round {state.round}/{state.totalRounds}</span>
         </div>
         <div className="game__actions">
           <SoundToggle enabled={soundOn} onToggle={onToggleSound} />
           {isHost && (
-            <button className="btn btn--ghost btn--sm" onClick={returnToLobby}>
-              Back to lobby
+            <button className="btn btn--ghost btn--sm" type="button" onClick={returnToLobby}>
+              Lobby
             </button>
           )}
-          <button className="btn btn--ghost btn--sm" onClick={leaveRoom}>
+          <button className="btn btn--ghost btn--sm" type="button" onClick={leaveRoom}>
             Leave
           </button>
         </div>
       </header>
 
-      <div className="game__status">
-        {state.phase === "choosing" && drawer && (
-          <p className="status-banner status-banner--choosing">
-            <span className="avatar avatar--sm" style={{ background: drawer.color }} />
-            <strong>{drawer.nickname}</strong> is choosing a word…
-            {isDrawer && <span className="you"> (that's you!)</span>}
-          </p>
-        )}
+      {(state.phase === "choosing" || state.phase === "drawing" || state.phase === "roundEnd") && (
+        <div className="game__wordstage">
+          {state.phase === "choosing" && drawer && (
+            <p className="wordstage__banner">
+              <Avatar nickname={drawer.nickname} color={drawer.color} size="sm" />
+              <strong>{drawer.nickname}</strong> is choosing a word…
+              {isDrawer && <span className="you"> (You)</span>}
+            </p>
+          )}
 
-        {state.phase === "drawing" && (
-          <div className="word-bar">
-            {isDrawer && myWord ? (
-              <div className="word-bar__drawer">
-                <span className="word-bar__label">Draw this word:</span>
-                <span className="word-bar__secret">{myWord}</span>
-              </div>
-            ) : (
-              <div className="word-bar__guesser">
-                <span className="word-bar__label">
-                  {state.wordLength} letters
-                </span>
-                <span className="word-bar__blanks">{state.maskedWord}</span>
-              </div>
-            )}
-            <CountdownTimer endsAt={state.turnEndsAt} label="Time left" />
-          </div>
-        )}
+          {state.phase === "drawing" && drawer && (
+            <>
+              <p className="wordstage__banner wordstage__banner--draw">
+                {isDrawer ? (
+                  <>✏️ You are drawing!</>
+                ) : (
+                  <>
+                    <Avatar nickname={drawer.nickname} color={drawer.color} size="sm" />
+                    <strong>{drawer.nickname}</strong> is drawing!
+                  </>
+                )}
+              </p>
+              {isDrawer && myWord ? (
+                <div className="wordstage__secret">{myWord}</div>
+              ) : (
+                <>
+                  {state.maskedWord && (
+                    <WordTiles masked={state.maskedWord} hintCount={state.hintCount} />
+                  )}
+                  <p className="wordstage__hint">
+                    {state.wordLength} letters — type your guess in chat
+                  </p>
+                </>
+              )}
+              <CountdownTimer
+                endsAt={state.turnEndsAt}
+                totalSeconds={state.settings.drawTimeSeconds}
+                label="Time left"
+              />
+            </>
+          )}
 
-        {state.phase === "roundEnd" && state.revealWord && (
-          <p className="status-banner status-banner--reveal">
-            The word was: <strong>{state.revealWord}</strong>
-          </p>
-        )}
-      </div>
+          {state.phase === "roundEnd" && state.revealWord && (
+            <>
+              <p className="wordstage__banner">The word was</p>
+              <div className="wordstage__secret">{state.revealWord}</div>
+            </>
+          )}
+        </div>
+      )}
 
-      <div className="game__body game__body--with-chat">
-        <aside className="sidebar">
-          <h2 className="panel__title">Players</h2>
-          <ul className="players">
+      <div className="game__body">
+        <aside className="game__sidebar">
+          <div className="game__sidebar-head">Players</div>
+          <ul className="game__sidebar-list">
             {players.map((p) => (
-              <li
+              <PlayerSlot
                 key={p.id}
-                className={`player ${p.id === state.currentDrawerId ? "player--drawer" : ""} ${state.correctGuessers.includes(p.id) ? "player--guessed" : ""}`}
-              >
-                <span className="avatar" style={{ background: p.color }} />
-                <span className="player__name">
-                  {p.nickname}
-                  {p.id === me?.id && <span className="you"> (you)</span>}
-                  {p.id === state.currentDrawerId && (
-                    <span className="drawer-tag"> drawing</span>
-                  )}
-                  {state.correctGuessers.includes(p.id) && (
-                    <span className="guessed-tag"> ✓</span>
-                  )}
-                  {!p.connected && (
-                    <span className="offline-tag"> offline</span>
-                  )}
-                </span>
-                <span className="score">{p.score}</span>
-              </li>
+                player={p}
+                meId={me?.id}
+                isDrawer={p.id === state.currentDrawerId}
+                hasGuessed={state.correctGuessers.includes(p.id)}
+                isLeader={p.id === leaderId && state.phase === "drawing"}
+                score={p.score}
+                compact
+              />
             ))}
           </ul>
         </aside>
 
-        <main className="stage">
-          <DrawingCanvas canDraw={canDraw} />
+        <main className="game__stage">
+          <DrawingCanvas canDraw={canDraw} drawerName={drawer?.nickname} />
         </main>
 
         <ChatPanel
           messages={chatMessages}
+          players={state.players}
           phase={state.phase}
           isDrawer={isDrawer}
           hasGuessed={hasGuessed}

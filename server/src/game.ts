@@ -10,12 +10,14 @@ import type {
 import {
   MIN_PLAYERS_TO_START,
   TIMING,
+  HINTS,
   WORD_CHOICE_COUNT,
   isCloseGuess,
   isCorrectGuess,
   pickWords,
   scoreDrawer,
   scoreGuesser,
+  unrevealedLetterIndices,
   wordLetterCount,
 } from "@maskari/shared";
 import type { Room, ServerPlayer } from "./room.js";
@@ -123,6 +125,7 @@ export class GameManager {
     room.currentWord = null;
     room.revealWord = null;
     room.correctGuessers = [];
+    room.revealedHintIndices.clear();
     room.roundPoints.clear();
     room.turnStartedAt = null;
     room.roundEndEndsAt = null;
@@ -166,6 +169,7 @@ export class GameManager {
     room.turnEndsAt = Date.now() + room.settings.drawTimeSeconds * 1000;
     room.correctGuessers = [];
     room.roundPoints.clear();
+    room.revealedHintIndices.clear();
     room.clearStrokes();
 
     this.io.to(room.code).emit("draw:clear");
@@ -185,6 +189,39 @@ export class GameManager {
     room.drawTimer = setTimeout(
       () => this.endTurn(room),
       room.settings.drawTimeSeconds * 1000,
+    );
+
+    this.scheduleHints(room);
+  }
+
+  /** Reveal one random letter every few seconds (skribbl-style hints). */
+  private scheduleHints(room: Room): void {
+    const word = room.currentWord;
+    if (!word) return;
+
+    const revealNext = () => {
+      if (room.phase !== "drawing" || !room.currentWord) return;
+
+      const unrevealed = unrevealedLetterIndices(
+        room.currentWord,
+        room.revealedHintIndices,
+      );
+      if (unrevealed.length <= HINTS.minHiddenLetters) return;
+
+      const pick =
+        unrevealed[Math.floor(Math.random() * unrevealed.length)]!;
+      room.revealedHintIndices.add(pick);
+      this.broadcast(room);
+
+      const stillHidden = unrevealed.length - 1;
+      if (stillHidden > HINTS.minHiddenLetters) {
+        room.hintTimer = setTimeout(revealNext, TIMING.hintIntervalSeconds * 1000);
+      }
+    };
+
+    room.hintTimer = setTimeout(
+      revealNext,
+      TIMING.hintIntervalSeconds * 1000,
     );
   }
 

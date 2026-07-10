@@ -4,6 +4,7 @@ import {
   MIN_PLAYERS_TO_START,
   SETTINGS_LIMITS,
 } from "@maskari/shared";
+import PlayerSlot from "./PlayerSlot";
 import SoundToggle from "./SoundToggle";
 
 type Props = {
@@ -39,7 +40,7 @@ export default function Lobby({
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     } catch {
-      /* clipboard may be unavailable; ignore */
+      /* clipboard may be unavailable */
     }
   }
 
@@ -59,54 +60,44 @@ export default function Lobby({
         <header className="lobby__head">
           <div>
             <h1>
-              Lobby <span className="tag">waiting</span>
+              Waiting room <span className="tag">lobby</span>
             </h1>
-            <p className="subtitle">Share the code, then the host starts.</p>
+            <p className="subtitle">Invite friends, then the host hits Start!</p>
           </div>
           <div className="lobby__head-actions">
             <SoundToggle enabled={soundOn} onToggle={onToggleSound} />
-            <button className="btn btn--ghost" onClick={leaveRoom}>
+            <button className="btn btn--ghost btn--sm" type="button" onClick={leaveRoom}>
               Leave
             </button>
           </div>
         </header>
 
         <div className="lobby__grid">
-          {/* Players */}
           <section className="panel">
             <h2 className="panel__title">
-              Players <span className="muted">({state.players.length})</span>
+              Players <span className="muted">({state.players.length}/{state.settings.maxPlayers})</span>
             </h2>
-            <ul className="players">
+            <ul className="player-slots">
               {state.players.map((p) => (
-                <li
-                  key={p.id}
-                  className={`player ${!p.connected ? "player--offline" : ""}`}
-                >
-                  <span className="avatar" style={{ background: p.color }} />
-                  <span className="player__name">
-                    {p.nickname}
-                    {p.id === me?.id && <span className="you"> (you)</span>}
-                  </span>
-                  {p.isHost && <span className="badge">host</span>}
-                  {!p.connected && <span className="badge badge--off">offline</span>}
-                </li>
+                <PlayerSlot key={p.id} player={p} meId={me?.id} />
               ))}
             </ul>
           </section>
 
-          {/* Room code + settings */}
           <section className="panel">
-            <h2 className="panel__title">Room code</h2>
+            <h2 className="panel__title">Invite friends</h2>
             <div className="code-box">
               <span className="code-box__code">{state.code}</span>
-              <button className="btn btn--sm" onClick={copyLink}>
+              <button className="btn btn--sm" type="button" onClick={copyLink}>
                 {copied ? "Copied!" : "Copy link"}
               </button>
             </div>
+            <p className="muted" style={{ marginTop: "0.5rem", fontSize: "0.85rem" }}>
+              Share the link — friends join with one click
+            </p>
 
-            <h2 className="panel__title" style={{ marginTop: "1.5rem" }}>
-              Settings
+            <h2 className="panel__title" style={{ marginTop: "1.25rem" }}>
+              Game settings
             </h2>
 
             <SettingRow
@@ -118,7 +109,7 @@ export default function Lobby({
               onChange={(rounds) => updateSettings({ rounds })}
             />
             <SettingRow
-              label="Draw time (s)"
+              label="Draw time (sec)"
               value={state.settings.drawTimeSeconds}
               min={SETTINGS_LIMITS.drawTimeSeconds.min}
               max={SETTINGS_LIMITS.drawTimeSeconds.max}
@@ -138,26 +129,26 @@ export default function Lobby({
             {isHost ? (
               <>
                 <button
-                  className="btn"
+                  className="btn btn--play"
                   style={{ marginTop: "1.25rem" }}
+                  type="button"
                   disabled={!canStart || starting}
-                  title={
-                    canStart
-                      ? "Start the game"
-                      : `Need at least ${MIN_PLAYERS_TO_START} players`
-                  }
                   onClick={handleStart}
                 >
                   {starting
                     ? "Starting…"
                     : canStart
-                      ? "Start game"
-                      : `Waiting for players (${state.players.length}/${MIN_PLAYERS_TO_START})`}
+                      ? "🎮 Start game!"
+                      : `Need ${MIN_PLAYERS_TO_START}+ players (${state.players.length})`}
                 </button>
-                {startError && <p className="error" style={{ marginTop: "0.75rem" }}>{startError}</p>}
+                {startError && (
+                  <p className="error" style={{ marginTop: "0.75rem" }}>
+                    {startError}
+                  </p>
+                )}
               </>
             ) : (
-              <p className="muted" style={{ marginTop: "1.25rem" }}>
+              <p className="muted" style={{ marginTop: "1.25rem", fontWeight: 800 }}>
                 Waiting for the host to start…
               </p>
             )}
@@ -191,18 +182,18 @@ function SettingRow({
       <div className="setting__control">
         <button
           className="stepper"
+          type="button"
           disabled={disabled || value <= min}
           onClick={() => onChange(value - step)}
-          type="button"
         >
           −
         </button>
         <span className="setting__value">{value}</span>
         <button
           className="stepper"
+          type="button"
           disabled={disabled || value >= max}
           onClick={() => onChange(value + step)}
-          type="button"
         >
           +
         </button>

@@ -29,7 +29,13 @@ function newStrokeId(): string {
  * re-rendered on undo / clear / sync / resize. During active drawing (local or
  * remote) only the newest segment is painted for performance.
  */
-export default function DrawingCanvas({ canDraw }: { canDraw: boolean }) {
+export default function DrawingCanvas({
+  canDraw,
+  drawerName,
+}: {
+  canDraw: boolean;
+  drawerName?: string;
+}) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const ctxRef = useRef<CanvasRenderingContext2D | null>(null);
@@ -44,6 +50,7 @@ export default function DrawingCanvas({ canDraw }: { canDraw: boolean }) {
   const [color, setColor] = useState("#000000");
   const [size, setSize] = useState(8);
   const [mode, setMode] = useState<DrawMode>("pen");
+  const [fullscreen, setFullscreen] = useState(false);
 
   // Keep latest tool values in refs so pointer handlers read fresh values.
   const toolRef = useRef({ color, size, mode });
@@ -267,8 +274,26 @@ export default function DrawingCanvas({ canDraw }: { canDraw: boolean }) {
     socket.emit("draw:undo");
   }
 
+  const toggleFullscreen = useCallback(() => {
+    const el = wrapRef.current?.closest(".canvas-area");
+    if (!el) return;
+    if (!document.fullscreenElement) {
+      void el.requestFullscreen().then(() => setFullscreen(true)).catch(() => {});
+    } else {
+      void document.exitFullscreen().then(() => setFullscreen(false)).catch(() => {});
+    }
+  }, []);
+
+  useEffect(() => {
+    function onFsChange() {
+      setFullscreen(!!document.fullscreenElement);
+    }
+    document.addEventListener("fullscreenchange", onFsChange);
+    return () => document.removeEventListener("fullscreenchange", onFsChange);
+  }, []);
+
   return (
-    <div className="canvas-area">
+    <div className={`canvas-area ${fullscreen ? "canvas-area--fullscreen" : ""}`}>
       <div
         ref={wrapRef}
         className={`canvas-wrap ${canDraw ? "" : "canvas-wrap--view"}`}
@@ -283,6 +308,22 @@ export default function DrawingCanvas({ canDraw }: { canDraw: boolean }) {
           onPointerCancel={endStroke}
           style={{ touchAction: "none", cursor: canDraw ? "crosshair" : "default" }}
         />
+        {!canDraw && (
+          <div className="canvas-overlay">
+            <span>
+              {drawerName ? `${drawerName} is drawing — guess the word!` : "Guess the word!"}
+            </span>
+          </div>
+        )}
+        <button
+          type="button"
+          className="canvas-fs-btn"
+          onClick={toggleFullscreen}
+          title={fullscreen ? "Exit fullscreen" : "Fullscreen canvas"}
+          aria-label={fullscreen ? "Exit fullscreen" : "Fullscreen canvas"}
+        >
+          {fullscreen ? "✕" : "⛶"}
+        </button>
       </div>
 
       {canDraw && (
@@ -322,22 +363,41 @@ export default function DrawingCanvas({ canDraw }: { canDraw: boolean }) {
 
           <div className="tool-actions">
             <button
-              className={`tool-btn ${mode === "pen" ? "tool-btn--active" : ""}`}
+              className={`tool-btn tool-btn--icon ${mode === "pen" ? "tool-btn--active" : ""}`}
               onClick={() => setMode("pen")}
+              title="Pen"
+              aria-label="Pen"
             >
-              Pen
+              ✏️
             </button>
             <button
-              className={`tool-btn ${mode === "eraser" ? "tool-btn--active" : ""}`}
+              className={`tool-btn tool-btn--icon ${mode === "eraser" ? "tool-btn--active" : ""}`}
               onClick={() => setMode("eraser")}
+              title="Eraser"
+              aria-label="Eraser"
             >
-              Eraser
+              🧽
             </button>
-            <button className="tool-btn" onClick={handleUndo}>
-              Undo
+            <button className="tool-btn tool-btn--icon" type="button" onClick={handleUndo} title="Undo" aria-label="Undo">
+              ↩
             </button>
-            <button className="tool-btn tool-btn--danger" onClick={handleClear}>
-              Clear
+            <button
+              className="tool-btn tool-btn--icon tool-btn--danger"
+              type="button"
+              onClick={handleClear}
+              title="Clear canvas"
+              aria-label="Clear canvas"
+            >
+              🗑
+            </button>
+            <button
+              className="tool-btn tool-btn--icon"
+              type="button"
+              onClick={toggleFullscreen}
+              title="Fullscreen"
+              aria-label="Fullscreen"
+            >
+              ⛶
             </button>
           </div>
         </div>

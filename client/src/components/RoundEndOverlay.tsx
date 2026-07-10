@@ -1,4 +1,5 @@
 import type { RoundScoreEntry } from "@maskari/shared";
+import { TIMING } from "@maskari/shared";
 import CountdownTimer from "./CountdownTimer";
 
 type Props = {
@@ -8,7 +9,6 @@ type Props = {
   roundEndEndsAt: number;
 };
 
-/** Full-screen reveal between turns with points earned and a countdown. */
 export default function RoundEndOverlay({
   word,
   drawerName,
@@ -19,16 +19,16 @@ export default function RoundEndOverlay({
 
   return (
     <div className="overlay overlay--round">
-      <div className="overlay__card overlay__card--round">
+      <div className="overlay__card">
         <p className="overlay__eyebrow">The word was</p>
         <h2 className="overlay__word">{word}</h2>
         <p className="overlay__sub">
-          <strong>{drawerName}</strong> was drawing
+          ✏️ <strong>{drawerName}</strong> was drawing
         </p>
 
         {roundScores.length > 0 ? (
           <>
-            <p className="overlay__scores-title">Points this turn</p>
+            <p className="overlay__scores-title">Points this round</p>
             <ul className="overlay__scores">
               {roundScores.map((s) => (
                 <li key={s.playerId}>
@@ -37,13 +37,18 @@ export default function RoundEndOverlay({
                 </li>
               ))}
             </ul>
-            <p className="overlay__total">{totalEarned} pts awarded</p>
+            <p className="overlay__total">{totalEarned} pts total</p>
           </>
         ) : (
-          <p className="overlay__none">Nobody scored this round.</p>
+          <p className="overlay__none">Nobody guessed it this round!</p>
         )}
 
-        <CountdownTimer endsAt={roundEndEndsAt} label="Next turn in" />
+        <CountdownTimer
+          endsAt={roundEndEndsAt}
+          totalSeconds={TIMING.roundEndSeconds}
+          label="Next turn in"
+          variant="bar"
+        />
       </div>
     </div>
   );

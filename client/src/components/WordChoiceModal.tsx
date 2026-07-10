@@ -1,3 +1,4 @@
+import { TIMING } from "@maskari/shared";
 import CountdownTimer from "./CountdownTimer";
 
 type Props = {
@@ -6,7 +7,6 @@ type Props = {
   onChoose: (word: string) => void;
 };
 
-/** Shown only to the drawer while they pick one of three words. */
 export default function WordChoiceModal({
   words,
   chooseEndsAt,
@@ -15,15 +15,21 @@ export default function WordChoiceModal({
   return (
     <div className="modal-backdrop">
       <div className="modal">
-        <h2 className="modal__title">Pick a word to draw</h2>
-        <p className="modal__hint">Choose within 10 seconds or one is picked for you.</p>
+        <h2 className="modal__title">Choose a word</h2>
+        <p className="modal__hint">Pick one to draw — or we choose for you!</p>
 
-        <CountdownTimer endsAt={chooseEndsAt} label="Choose in" />
+        <CountdownTimer
+          endsAt={chooseEndsAt}
+          totalSeconds={TIMING.chooseSeconds}
+          label="Choose in"
+          variant="bar"
+        />
 
         <div className="word-choices">
           {words.map((word) => (
             <button
               key={word}
+              type="button"
               className="word-btn"
               onClick={() => onChoose(word)}
             >
